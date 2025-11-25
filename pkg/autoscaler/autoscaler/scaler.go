@@ -32,23 +32,23 @@ type Autoscaler struct {
 	Meta      *ScalingMeta
 }
 type ScalingMeta struct {
-    Config        *workload.HomogeneousTarget
+	Config        *workload.HomogeneousTarget
 	MetricTargets map[string]float64
 	BindingId     types.UID
 	Namespace     string
 }
 
 func NewAutoscaler(behavior *workload.AutoscalingPolicyBehavior, binding *workload.AutoscalingPolicyBinding, metricTargets map[string]float64) *Autoscaler {
-    return &Autoscaler{
-        Status:    NewStatus(behavior),
-        Collector: NewMetricCollector(&binding.Spec.ScalingConfiguration.Target, binding, metricTargets),
-        Meta: &ScalingMeta{
-            Config:        binding.Spec.ScalingConfiguration,
-            BindingId:     binding.UID,
-            Namespace:     binding.Namespace,
-            MetricTargets: metricTargets,
-        },
-    }
+	return &Autoscaler{
+		Status:    NewStatus(behavior),
+		Collector: NewMetricCollector(&binding.Spec.HomogeneousTarget.Target, binding, metricTargets),
+		Meta: &ScalingMeta{
+			Config:        binding.Spec.HomogeneousTarget,
+			BindingId:     binding.UID,
+			Namespace:     binding.Namespace,
+			MetricTargets: metricTargets,
+		},
+	}
 }
 
 func (autoscaler *Autoscaler) Scale(ctx context.Context, podLister listerv1.PodLister, autoscalePolicy *workload.AutoscalingPolicy, currentInstancesCount int32) (int32, error) {

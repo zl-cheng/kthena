@@ -143,9 +143,9 @@ func (ac *AutoscaleController) Reconcile(ctx context.Context) {
 			klog.Warningf("invalid autoscaling policy name, binding name: %s", binding.Name)
 			continue
 		}
-		if binding.Spec.ScalingConfiguration != nil {
-			scalerSet.Insert(formatAutoscalerMapKey(binding.Name, &binding.Spec.ScalingConfiguration.Target.TargetRef))
-		} else if binding.Spec.OptimizerConfiguration != nil {
+		if binding.Spec.HomogeneousTarget != nil {
+			scalerSet.Insert(formatAutoscalerMapKey(binding.Name, &binding.Spec.HomogeneousTarget.Target.TargetRef))
+		} else if binding.Spec.HeterogeneousTarget != nil {
 			optimizerSet.Insert(formatAutoscalerMapKey(binding.Name, nil))
 		} else {
 			klog.Warningf("Either homogeneous or heterogeneous not set, binding name: %s", binding.Name)
@@ -248,12 +248,12 @@ func (ac *AutoscaleController) schedule(ctx context.Context, binding *workload.A
 		klog.Errorf("get autoscale policy error: %v", err)
 		return err
 	}
-	if binding.Spec.OptimizerConfiguration != nil {
+	if binding.Spec.HeterogeneousTarget != nil {
 		if err := ac.doOptimize(ctx, binding, autoscalePolicy); err != nil {
 			klog.Errorf("failed to do optimize, err: %v", err)
 			return err
 		}
-	} else if binding.Spec.ScalingConfiguration != nil {
+	} else if binding.Spec.HomogeneousTarget != nil {
 		if err := ac.doScale(ctx, binding, autoscalePolicy); err != nil {
 			klog.Errorf("failed to do scale, err: %v", err)
 			return err
@@ -308,7 +308,7 @@ func (ac *AutoscaleController) doOptimize(ctx context.Context, binding *workload
 
 func (ac *AutoscaleController) doScale(ctx context.Context, binding *workload.AutoscalingPolicyBinding, autoscalePolicy *workload.AutoscalingPolicy) error {
 	metricTargets := getMetricTargets(autoscalePolicy)
-	target := binding.Spec.ScalingConfiguration.Target
+	target := binding.Spec.HomogeneousTarget.Target
 	instanceKey := formatAutoscalerMapKey(binding.Name, &target.TargetRef)
 	scaler, ok := ac.scalerMap[instanceKey]
 	if !ok {

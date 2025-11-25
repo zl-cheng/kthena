@@ -33,7 +33,7 @@ type Optimizer struct {
 }
 
 type OptimizerMeta struct {
-    Config        *workload.HeterogeneousTarget
+	Config        *workload.HeterogeneousTarget
 	MetricTargets map[string]float64
 	ScalingOrder  []*ReplicaBlock
 	MinReplicas   int32
@@ -67,15 +67,15 @@ func (meta *OptimizerMeta) RestoreReplicasOfEachBackend(replicas int32) map[stri
 }
 
 func NewOptimizerMeta(binding *workload.AutoscalingPolicyBinding) *OptimizerMeta {
-    if binding.Spec.OptimizerConfiguration == nil {
-        klog.Warningf("OptimizerConfig not configured in binding: %s", binding.Name)
-        return nil
-    }
-    costExpansionRatePercent := binding.Spec.OptimizerConfiguration.CostExpansionRatePercent
+	if binding.Spec.HeterogeneousTarget == nil {
+		klog.Warningf("OptimizerConfig not configured in binding: %s", binding.Name)
+		return nil
+	}
+	costExpansionRatePercent := binding.Spec.HeterogeneousTarget.CostExpansionRatePercent
 	minReplicas := int32(0)
 	maxReplicas := int32(0)
 	var scalingOrder []*ReplicaBlock
-    for index, param := range binding.Spec.OptimizerConfiguration.Params {
+	for index, param := range binding.Spec.HeterogeneousTarget.Params {
 		minReplicas += param.MinReplicas
 		maxReplicas += param.MaxReplicas
 		replicas := param.MaxReplicas - param.MinReplicas
@@ -110,8 +110,8 @@ func NewOptimizerMeta(binding *workload.AutoscalingPolicyBinding) *OptimizerMeta
 		}
 		return scalingOrder[i].index < scalingOrder[j].index
 	})
-    return &OptimizerMeta{
-        Config:       binding.Spec.OptimizerConfiguration,
+	return &OptimizerMeta{
+		Config:       binding.Spec.HeterogeneousTarget,
 		MinReplicas:  minReplicas,
 		MaxReplicas:  maxReplicas,
 		ScalingOrder: scalingOrder,
@@ -124,9 +124,9 @@ func NewOptimizerMeta(binding *workload.AutoscalingPolicyBinding) *OptimizerMeta
 
 func NewOptimizer(behavior *workload.AutoscalingPolicyBehavior, binding *workload.AutoscalingPolicyBinding, metricTargets map[string]float64) *Optimizer {
 	collectors := make(map[string]*MetricCollector)
-    for _, param := range binding.Spec.OptimizerConfiguration.Params {
-        collectors[param.Target.TargetRef.Name] = NewMetricCollector(&param.Target, binding, metricTargets)
-    }
+	for _, param := range binding.Spec.HeterogeneousTarget.Params {
+		collectors[param.Target.TargetRef.Name] = NewMetricCollector(&param.Target, binding, metricTargets)
+	}
 
 	meta := NewOptimizerMeta(binding)
 	meta.MetricTargets = metricTargets

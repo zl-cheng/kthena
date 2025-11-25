@@ -33,10 +33,10 @@ type AutoscalingPolicyBindingSpec struct {
 	// Dynamically adjust the deployment ratio of H100/A100 instances based on real-time computing power demands
 	// Use integer programming and similar methods to precisely meet computing requirements
 	// Maximize hardware utilization efficiency
-    OptimizerConfiguration *HeterogeneousTarget `json:"heterogeneousTarget,omitempty"`
+	HeterogeneousTarget *HeterogeneousTarget `json:"heterogeneousTarget,omitempty"`
 
 	// Adjust the number of related instances based on specified monitoring metrics and their target values.
-    ScalingConfiguration *HomogeneousTarget `json:"homogeneousTarget,omitempty"`
+	HomogeneousTarget *HomogeneousTarget `json:"homogeneousTarget,omitempty"`
 }
 
 type AutoscalingTargetType string
@@ -68,7 +68,7 @@ type HomogeneousTarget struct {
 type HeterogeneousTarget struct {
 	// Parameters of multiple Model Serving Groups to be optimized.
 	// +kubebuilder:validation:MinItems=1
-    Params []HeterogeneousTargetParam `json:"params,omitempty"`
+	Params []HeterogeneousTargetParam `json:"params,omitempty"`
 	// CostExpansionRatePercent is the percentage rate at which the cost expands.
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:default=200
@@ -105,11 +105,6 @@ type HeterogeneousTargetParam struct {
 	// +kubebuilder:validation:Maximum=1000000
 	MaxReplicas int32 `json:"maxReplicas"`
 }
-
-// Backward-compatible aliases
-type OptimizerConfiguration = HeterogeneousTarget
-type ScalingConfiguration = HomogeneousTarget
-type OptimizerParam = HeterogeneousTargetParam
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status

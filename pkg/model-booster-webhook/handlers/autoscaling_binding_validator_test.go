@@ -53,11 +53,11 @@ func TestValidateAutoscalingBinding(t *testing.T) {
 					PolicyRef: corev1.LocalObjectReference{
 						Name: "dummy-policy",
 					},
-					OptimizerConfiguration: nil,
-					ScalingConfiguration:   nil,
+					HeterogeneousTarget: nil,
+					HomogeneousTarget:   nil,
 				},
 			},
-			expected: []string{"  - spec.ScalingConfiguration: Required value: spec.ScalingConfiguration should be set if spec.OptimizerConfiguration does not exist"},
+			expected: []string{"  - spec.homogeneousTarget: Required value: spec.homogeneousTarget should be set if spec.heterogeneousTarget does not exist"},
 		},
 		{
 			name: "optimizer and scaling config both are not nil",
@@ -70,8 +70,8 @@ func TestValidateAutoscalingBinding(t *testing.T) {
 					PolicyRef: corev1.LocalObjectReference{
 						Name: "dummy-policy",
 					},
-					OptimizerConfiguration: &v1alpha1.OptimizerConfiguration{
-						Params: []v1alpha1.OptimizerParam{
+					HeterogeneousTarget: &v1alpha1.HeterogeneousTarget{
+						Params: []v1alpha1.HeterogeneousTargetParam{
 							{
 								Target: v1alpha1.Target{
 									TargetRef: corev1.ObjectReference{
@@ -84,7 +84,7 @@ func TestValidateAutoscalingBinding(t *testing.T) {
 						},
 						CostExpansionRatePercent: 100,
 					},
-					ScalingConfiguration: &v1alpha1.ScalingConfiguration{
+					HomogeneousTarget: &v1alpha1.HomogeneousTarget{
 						Target: v1alpha1.Target{
 							TargetRef: corev1.ObjectReference{
 								Name: "target-name",
@@ -95,7 +95,7 @@ func TestValidateAutoscalingBinding(t *testing.T) {
 					},
 				},
 			},
-			expected: []string{"  - spec.ScalingConfiguration: Forbidden: both spec.OptimizerConfiguration and spec.ScalingConfiguration can not be set at the same time"},
+			expected: []string{"  - spec.homogeneousTarget: Forbidden: both spec.heterogeneousTarget and spec.homogeneousTarget can not be set at the same time"},
 		},
 		{
 			name: "different autoscaling policy name",
@@ -108,8 +108,8 @@ func TestValidateAutoscalingBinding(t *testing.T) {
 					PolicyRef: corev1.LocalObjectReference{
 						Name: "not-exist-policy",
 					},
-					OptimizerConfiguration: nil,
-					ScalingConfiguration: &v1alpha1.ScalingConfiguration{
+					HeterogeneousTarget: nil,
+					HomogeneousTarget: &v1alpha1.HomogeneousTarget{
 						Target: v1alpha1.Target{
 							TargetRef: corev1.ObjectReference{
 								Name: "target-name",

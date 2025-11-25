@@ -18,17 +18,17 @@ limitations under the License.
 
 package v1alpha1
 
-// OptimizerConfigurationApplyConfiguration represents a declarative configuration of the OptimizerConfiguration type for use
+// HeterogeneousTargetApplyConfiguration represents a declarative configuration of the HeterogeneousTarget type for use
 // with apply.
 type HeterogeneousTargetApplyConfiguration struct {
-    Params                   []HeterogeneousTargetParamApplyConfiguration `json:"params,omitempty"`
-    CostExpansionRatePercent *int32                             `json:"costExpansionRatePercent,omitempty"`
+	Params                   []HeterogeneousTargetParamApplyConfiguration `json:"params,omitempty"`
+	CostExpansionRatePercent *int32                                       `json:"costExpansionRatePercent,omitempty"`
 }
 
-// OptimizerConfigurationApplyConfiguration constructs a declarative configuration of the OptimizerConfiguration type for use with
+// HeterogeneousTargetApplyConfiguration constructs a declarative configuration of the HeterogeneousTarget type for use with
 // apply.
 func HeterogeneousTarget() *HeterogeneousTargetApplyConfiguration {
-    return &HeterogeneousTargetApplyConfiguration{}
+	return &HeterogeneousTargetApplyConfiguration{}
 }
 
 // WithParams adds the given value to the Params field in the declarative configuration
@@ -39,15 +39,15 @@ func (b *HeterogeneousTargetApplyConfiguration) WithParams(values ...*Heterogene
 		if values[i] == nil {
 			panic("nil value passed to WithParams")
 		}
-        b.Params = append(b.Params, *values[i])
+		b.Params = append(b.Params, *values[i])
 	}
-    return b
+	return b
 }
 
 // WithCostExpansionRatePercent sets the CostExpansionRatePercent field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the CostExpansionRatePercent field is set to the value of the last call.
 func (b *HeterogeneousTargetApplyConfiguration) WithCostExpansionRatePercent(value int32) *HeterogeneousTargetApplyConfiguration {
-    b.CostExpansionRatePercent = &value
-    return b
+	b.CostExpansionRatePercent = &value
+	return b
 }
