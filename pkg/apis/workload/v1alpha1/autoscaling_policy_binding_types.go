@@ -78,6 +78,8 @@ type Heterogeneous struct {
 
 type Target struct {
 	// TargetRef references the target object.
+	// The default behavior will be set to ModelServingKind.
+	// Current supported kinds are ModelServing and ModelServing/role.
 	TargetRef corev1.ObjectReference `json:"targetRef"`
 	// AdditionalMatchLabels is the additional labels to match the target object.
 	// +optional
