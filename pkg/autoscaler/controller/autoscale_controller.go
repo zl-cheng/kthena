@@ -289,6 +289,8 @@ func (ac *AutoscaleController) doOptimize(ctx context.Context, binding *workload
 	if !ok {
 		optimizer = autoscaler.NewOptimizer(&autoscalePolicy.Spec.Behavior, binding, metricTargets)
 		ac.optimizerMap[optimizerKey] = optimizer
+	} else {
+		optimizer.UpdateMeta(binding)
 	}
 	// Fetch current replicas
 	replicasMap := make(map[string]int32, len(optimizer.Meta.Config.Params))
@@ -331,6 +333,8 @@ func (ac *AutoscaleController) doScale(ctx context.Context, binding *workload.Au
 	if !ok {
 		scaler = autoscaler.NewAutoscaler(&autoscalePolicy.Spec.Behavior, binding, metricTargets)
 		ac.scalerMap[instanceKey] = scaler
+	} else {
+		scaler.UpdateMeta(binding)
 	}
 	// Fetch current replicas
 	currentInstancesCount, err := ac.getTargetReplicas(&target.TargetRef)

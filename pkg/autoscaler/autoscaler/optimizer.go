@@ -137,6 +137,10 @@ func NewOptimizer(behavior *workload.AutoscalingPolicyBehavior, binding *workloa
 	}
 }
 
+func (optimizer *Optimizer) UpdateMeta(binding *workload.AutoscalingPolicyBinding) {
+	optimizer.Meta = NewOptimizerMeta(binding)
+}
+
 func (optimizer *Optimizer) Optimize(ctx context.Context, podLister listerv1.PodLister, autoscalePolicy *workload.AutoscalingPolicy, currentInstancesCounts map[string]int32) (map[string]int32, error) {
 	size := len(optimizer.Meta.Config.Params)
 	unreadyInstancesCount := int32(0)

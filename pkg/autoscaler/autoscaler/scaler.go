@@ -31,11 +31,11 @@ type Autoscaler struct {
 	Status    *Status
 	Meta      *ScalingMeta
 }
+
 type ScalingMeta struct {
-	Config        *workload.HomogeneousTarget
-	MetricTargets map[string]float64
-	BindingId     types.UID
-	Namespace     string
+	Config    *workload.HomogeneousTarget
+	BindingId types.UID
+	Namespace string
 }
 
 func NewAutoscaler(behavior *workload.AutoscalingPolicyBehavior, binding *workload.AutoscalingPolicyBinding, metricTargets map[string]float64) *Autoscaler {
@@ -43,11 +43,18 @@ func NewAutoscaler(behavior *workload.AutoscalingPolicyBehavior, binding *worklo
 		Status:    NewStatus(behavior),
 		Collector: NewMetricCollector(&binding.Spec.HomogeneousTarget.Target, binding, metricTargets),
 		Meta: &ScalingMeta{
-			Config:        binding.Spec.HomogeneousTarget,
-			BindingId:     binding.UID,
-			Namespace:     binding.Namespace,
-			MetricTargets: metricTargets,
+			Config:    binding.Spec.HomogeneousTarget,
+			BindingId: binding.UID,
+			Namespace: binding.Namespace,
 		},
+	}
+}
+
+func (autoscaler *Autoscaler) UpdateMeta(binding *workload.AutoscalingPolicyBinding) {
+	autoscaler.Meta = &ScalingMeta{
+		Config:    binding.Spec.HomogeneousTarget,
+		BindingId: binding.UID,
+		Namespace: binding.Namespace,
 	}
 }
 
@@ -63,7 +70,7 @@ func (autoscaler *Autoscaler) Scale(ctx context.Context, podLister listerv1.PodL
 		MaxInstances:          autoscaler.Meta.Config.MaxReplicas,
 		CurrentInstancesCount: currentInstancesCount,
 		Tolerance:             float64(autoscalePolicy.Spec.TolerancePercent) * 0.01,
-		MetricTargets:         autoscaler.Meta.MetricTargets,
+		MetricTargets:         autoscaler.Collector.MetricTargets,
 		UnreadyInstancesCount: unreadyInstancesCount,
 		ReadyInstancesMetrics: []algorithm.Metrics{readyInstancesMetrics},
 		ExternalMetrics:       make(algorithm.Metrics),

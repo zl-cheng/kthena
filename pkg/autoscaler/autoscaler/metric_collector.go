@@ -45,6 +45,7 @@ type MetricCollector struct {
 	Target          *v1alpha1.Target
 	Scope           Scope
 	WatchMetricList sets.String
+	MetricTargets   map[string]float64
 }
 
 func NewMetricCollector(target *v1alpha1.Target, binding *v1alpha1.AutoscalingPolicyBinding, metricTargets map[string]float64) *MetricCollector {
@@ -55,6 +56,7 @@ func NewMetricCollector(target *v1alpha1.Target, binding *v1alpha1.AutoscalingPo
 			Namespace:      binding.Namespace,
 			OwnedBindingId: binding.UID,
 		},
+		MetricTargets:   metricTargets,
 		WatchMetricList: util.ExtractKeysToSet(metricTargets),
 	}
 }
