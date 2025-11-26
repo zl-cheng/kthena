@@ -62,7 +62,7 @@ func (autoscaler *Autoscaler) Scale(ctx context.Context, podLister listerv1.PodL
 	unreadyInstancesCount, readyInstancesMetrics, err := autoscaler.Collector.UpdateMetrics(ctx, podLister)
 	if err != nil {
 		klog.Errorf("update metrics error: %v", err)
-		return 0, err
+		return -1, err
 	}
 	// minInstance <- AutoscaleScope, currentInstancesCount(replicas) <- workload
 	instancesAlgorithm := algorithm.RecommendedInstancesAlgorithm{
@@ -77,8 +77,8 @@ func (autoscaler *Autoscaler) Scale(ctx context.Context, podLister listerv1.PodL
 	}
 	recommendedInstances, skip := instancesAlgorithm.GetRecommendedInstances()
 	if skip {
-		klog.Warning("skip recommended instances")
-		return 0, nil
+		klog.InfoS("skip recommended instances")
+		return -1, nil
 	}
 	if autoscalePolicy.Spec.Behavior.ScaleUp.PanicPolicy.PanicThresholdPercent != nil && recommendedInstances*100 >= currentInstancesCount*(*autoscalePolicy.Spec.Behavior.ScaleUp.PanicPolicy.PanicThresholdPercent) {
 		autoscaler.Status.RefreshPanicMode()

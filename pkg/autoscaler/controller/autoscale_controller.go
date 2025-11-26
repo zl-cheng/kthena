@@ -349,6 +349,9 @@ func (ac *AutoscaleController) doScale(ctx context.Context, binding *workload.Au
 		klog.Errorf("failed to do homogeneous scaling for target %s, err: %v", target.TargetRef.Name, err)
 		return err
 	}
+	if recommendedInstances < 0 {
+		return nil
+	}
 	// Do update replicas
 	if err := ac.updateTargetReplicas(ctx, &target.TargetRef, recommendedInstances); err != nil {
 		klog.Errorf("failed to update target replicas %s, err: %v", target.TargetRef.Name, err)
