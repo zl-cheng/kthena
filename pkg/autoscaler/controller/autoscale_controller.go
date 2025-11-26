@@ -204,9 +204,9 @@ func (ac *AutoscaleController) updateTargetReplicas(ctx context.Context, targetR
 			return err
 		}
 		instance_copy := instance.DeepCopy()
-		for _, role := range instance_copy.Spec.Template.Roles {
+		for idx := range instance_copy.Spec.Template.Roles {
+			role := &instance_copy.Spec.Template.Roles[idx]
 			if role.Name == roleName {
-				// need not update replicas
 				if role.Replicas != nil && *role.Replicas == replicas {
 					return nil
 				}
