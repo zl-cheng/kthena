@@ -25,6 +25,7 @@ import (
 	"github.com/volcano-sh/kthena/pkg/apis/workload/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
 func TestValidateAutoscalingBinding(t *testing.T) {
@@ -143,5 +144,121 @@ func TestValidateAutoscalingBinding(t *testing.T) {
 
 			assert.Equal(t, tt.expected, lines)
 		})
+	}
+}
+
+func TestValidateBindingTargetKind_HeterogeneousValidModelServing(t *testing.T) {
+	asp := &v1alpha1.AutoscalingPolicyBinding{
+		Spec: v1alpha1.AutoscalingPolicyBindingSpec{
+			HeterogeneousTarget: &v1alpha1.HeterogeneousTarget{
+				Params: []v1alpha1.HeterogeneousTargetParam{
+					{
+						Target: v1alpha1.Target{
+							TargetRef: corev1.ObjectReference{Kind: v1alpha1.ModelServingKind.Kind},
+						},
+						MinReplicas: 0,
+						MaxReplicas: 1,
+					},
+				},
+			},
+		},
+	}
+	errs := validateBindingTargetKind(asp)
+	if len(errs) != 0 {
+		t.Fatalf("expected no errors, got %d: %v", len(errs), errs)
+	}
+}
+
+func TestValidateBindingTargetKind_HeterogeneousValidRole(t *testing.T) {
+	asp := &v1alpha1.AutoscalingPolicyBinding{
+		Spec: v1alpha1.AutoscalingPolicyBindingSpec{
+			HeterogeneousTarget: &v1alpha1.HeterogeneousTarget{
+				Params: []v1alpha1.HeterogeneousTargetParam{
+					{
+						Target: v1alpha1.Target{
+							TargetRef: corev1.ObjectReference{Kind: v1alpha1.ModelServingKind.Kind + ModelServingRoleKindSuffix},
+						},
+						MinReplicas: 0,
+						MaxReplicas: 1,
+					},
+				},
+			},
+		},
+	}
+	errs := validateBindingTargetKind(asp)
+	if len(errs) != 0 {
+		t.Fatalf("expected no errors, got %d: %v", len(errs), errs)
+	}
+}
+
+func TestValidateBindingTargetKind_HeterogeneousInvalid(t *testing.T) {
+	invalidKind := "Deployment"
+	asp := &v1alpha1.AutoscalingPolicyBinding{
+		Spec: v1alpha1.AutoscalingPolicyBindingSpec{
+			HeterogeneousTarget: &v1alpha1.HeterogeneousTarget{
+				Params: []v1alpha1.HeterogeneousTargetParam{
+					{
+						Target: v1alpha1.Target{
+							TargetRef: corev1.ObjectReference{Kind: invalidKind},
+						},
+						MinReplicas: 0,
+						MaxReplicas: 1,
+					},
+				},
+			},
+		},
+	}
+	errs := validateBindingTargetKind(asp)
+	if len(errs) != 1 {
+		t.Fatalf("expected 1 error, got %d: %v", len(errs), errs)
+	}
+	if errs[0].Type != field.ErrorTypeInvalid {
+		t.Fatalf("expected invalid error type, got %v", errs[0].Type)
+	}
+	if errs[0].Field != "spec.heterogeneousTarget.params[0].targetRef.kind" {
+		t.Fatalf("unexpected field path: %s", errs[0].Field)
+	}
+}
+
+func TestValidateBindingTargetKind_HomogeneousValidModelServing(t *testing.T) {
+	asp := &v1alpha1.AutoscalingPolicyBinding{
+		Spec: v1alpha1.AutoscalingPolicyBindingSpec{
+			HomogeneousTarget: &v1alpha1.HomogeneousTarget{
+				Target: v1alpha1.Target{
+					TargetRef: corev1.ObjectReference{Kind: v1alpha1.ModelServingKind.Kind},
+				},
+				MinReplicas: 0,
+				MaxReplicas: 1,
+			},
+		},
+	}
+	errs := validateBindingTargetKind(asp)
+	if len(errs) != 0 {
+		t.Fatalf("expected no errors, got %d: %v", len(errs), errs)
+	}
+}
+
+func TestValidateBindingTargetKind_HomogeneousInvalid(t *testing.T) {
+	invalidKind := "Unknown"
+	asp := &v1alpha1.AutoscalingPolicyBinding{
+		Spec: v1alpha1.AutoscalingPolicyBindingSpec{
+			HomogeneousTarget: &v1alpha1.HomogeneousTarget{
+				Target: v1alpha1.Target{
+					TargetRef: corev1.ObjectReference{Kind: invalidKind},
+				},
+				MinReplicas: 0,
+				MaxReplicas: 1,
+			},
+		},
+	}
+	errs := validateBindingTargetKind(asp)
+	if len(errs) != 1 {
+		t.Fatalf("expected 1 error, got %d: %v", len(errs), errs)
+	}
+	if errs[0].Type != field.ErrorTypeInvalid {
+		t.Fatalf("expected invalid error type, got %v", errs[0].Type)
+	}
+	if errs[0].Field != "spec.homogeneousTarget.targetRef.kind" {
+		t.Fatalf("unexpected field path: %s", errs[0].Field)
 	}
 }

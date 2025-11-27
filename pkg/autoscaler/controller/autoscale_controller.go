@@ -364,10 +364,6 @@ func (ac *AutoscaleController) getAutoscalePolicy(autoscalingPolicyName string, 
 }
 
 func formatAutoscalerMapKey(bindingName string, targetRef *v1.ObjectReference) string {
-	if targetRef == nil {
-		return bindingName
-	}
-	// Default to ModelServingKind
 	if targetRef.Kind == "" {
 		targetRef.Kind = workload.ModelServingKind.Kind
 	}
