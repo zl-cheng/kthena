@@ -189,8 +189,7 @@ func (ac *AutoscaleController) updateTargetReplicas(ctx context.Context, targetR
 		}
 		instance_copy := instance.DeepCopy()
 		instance_copy.Spec.Replicas = &replicas
-		_, err = ac.client.WorkloadV1alpha1().ModelServings(namespaceScope).Update(ctx, instance_copy, metav1.UpdateOptions{})
-		if err != nil {
+		if _, err = ac.client.WorkloadV1alpha1().ModelServings(namespaceScope).Update(ctx, instance_copy, metav1.UpdateOptions{}); err != nil {
 			return err
 		}
 	case workload.ModelServingKind.Kind + util.ModelServingRoleKindSuffix:
@@ -213,8 +212,7 @@ func (ac *AutoscaleController) updateTargetReplicas(ctx context.Context, targetR
 				break
 			}
 		}
-		_, err = ac.client.WorkloadV1alpha1().ModelServings(namespaceScope).Update(ctx, instance_copy, metav1.UpdateOptions{})
-		if err != nil {
+		if _, err = ac.client.WorkloadV1alpha1().ModelServings(namespaceScope).Update(ctx, instance_copy, metav1.UpdateOptions{}); err != nil {
 			return err
 		}
 	default:
@@ -282,11 +280,12 @@ func (ac *AutoscaleController) schedule(ctx context.Context, binding *workload.A
 }
 
 func (ac *AutoscaleController) doOptimize(ctx context.Context, binding *workload.AutoscalingPolicyBinding, autoscalePolicy *workload.AutoscalingPolicy) error {
-	optimizerKey := formatAutoscalerMapKey(binding.Name, nil)
-	optimizer, ok := ac.optimizerMap[optimizerKey]
+	key := formatAutoscalerMapKey(binding.Name, nil)
+	optimizer, ok := ac.optimizerMap[key]
 	if !ok || optimizer.NeedUpdate(autoscalePolicy, binding) {
 		optimizer = autoscaler.NewOptimizer(autoscalePolicy, binding)
-		ac.optimizerMap[optimizerKey] = optimizer
+		ac.optimizerMap[key] = optimizer
+		klog.Infof("asp: %s or binding: %s changed, create new optimizer", autoscalePolicy.Name, binding.Name)
 	}
 	// Fetch current replicas
 	replicasMap := make(map[string]int32, len(optimizer.Meta.Config.Params))
@@ -323,11 +322,12 @@ func (ac *AutoscaleController) doOptimize(ctx context.Context, binding *workload
 
 func (ac *AutoscaleController) doScale(ctx context.Context, binding *workload.AutoscalingPolicyBinding, autoscalePolicy *workload.AutoscalingPolicy) error {
 	target := binding.Spec.HomogeneousTarget.Target
-	instanceKey := formatAutoscalerMapKey(binding.Name, &target.TargetRef)
-	scaler, ok := ac.scalerMap[instanceKey]
+	key := formatAutoscalerMapKey(binding.Name, &target.TargetRef)
+	scaler, ok := ac.scalerMap[key]
 	if !ok || scaler.NeedUpdate(autoscalePolicy, binding) {
 		scaler = autoscaler.NewAutoscaler(autoscalePolicy, binding)
-		ac.scalerMap[instanceKey] = scaler
+		ac.scalerMap[key] = scaler
+		klog.Infof("asp: %s or binding: %s changed, create new scaler", autoscalePolicy.Name, binding.Name)
 	}
 	// Fetch current replicas
 	currentInstancesCount, err := ac.getTargetReplicas(&target.TargetRef)
@@ -364,9 +364,11 @@ func (ac *AutoscaleController) getAutoscalePolicy(autoscalingPolicyName string, 
 }
 
 func formatAutoscalerMapKey(bindingName string, targetRef *v1.ObjectReference) string {
-	if targetRef.Kind == "" {
-		targetRef.Kind = workload.ModelServingKind.Kind
-	}
-
-	return bindingName + "#" + targetRef.Kind + "#" + targetRef.Name
+    if targetRef == nil {
+        return bindingName
+    }
+    if targetRef.Kind == "" {
+        targetRef.Kind = workload.ModelServingKind.Kind
+    }
+    return bindingName + "#" + targetRef.Kind + "#" + targetRef.Name
 }

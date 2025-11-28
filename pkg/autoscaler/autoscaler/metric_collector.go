@@ -27,7 +27,6 @@ import (
 	io_prometheus_client "github.com/prometheus/client_model/go"
 	"github.com/prometheus/common/expfmt"
 	"github.com/volcano-sh/kthena/pkg/apis/workload/v1alpha1"
-	workload "github.com/volcano-sh/kthena/pkg/apis/workload/v1alpha1"
 	"github.com/volcano-sh/kthena/pkg/autoscaler/algorithm"
 	"github.com/volcano-sh/kthena/pkg/autoscaler/datastructure"
 	"github.com/volcano-sh/kthena/pkg/autoscaler/histogram"
@@ -83,7 +82,7 @@ type Generations struct {
 	BindingGeneration         int64
 }
 
-func GetMetricTargets(autoscalePolicy *workload.AutoscalingPolicy) algorithm.Metrics {
+func GetMetricTargets(autoscalePolicy *v1alpha1.AutoscalingPolicy) algorithm.Metrics {
 	metricTargets := algorithm.Metrics{}
 	if autoscalePolicy == nil {
 		klog.Warning("autoscalePolicy is nil, can't get metricTargets")
@@ -99,14 +98,9 @@ func GetMetricTargets(autoscalePolicy *workload.AutoscalingPolicy) algorithm.Met
 func (collector *MetricCollector) UpdateMetrics(ctx context.Context, podLister listerv1.PodLister) (unreadyInstancesCount int32, readyInstancesMetric algorithm.Metrics, err error) {
 	// Get pod list which will be invoked api to get metrics
 	unreadyInstancesCount = int32(0)
-	matchLabels, err := util.GetTargetLabels(collector.Target)
+	pods, err := util.GetMetricPods(podLister, collector.Scope.Namespace, collector.Target)
 	if err != nil {
-		klog.Errorf("get target labels error: %v", err)
-		return
-	}
-	pods, err := util.GetMetricPods(podLister, collector.Scope.Namespace, matchLabels)
-	if err != nil {
-		klog.Errorf("list watched pod error: %v in namespace: %s, labels: %v", err, collector.Scope.Namespace, collector.Target.AdditionalMatchLabels)
+		klog.Errorf("list watched pod error: %v in namespace: %s, labels: %v", err, collector.Scope.Namespace, collector.Target.MetricEndpoint)
 		return
 	}
 	if len(pods) == 0 {

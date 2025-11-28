@@ -51,8 +51,12 @@ func BuildScalingPolicyBindingSpec(backend *workload.ModelBackend, name string) 
 					Name: name,
 					Kind: workload.ModelServingKind.Kind,
 				},
-				AdditionalMatchLabels: map[string]string{
-					workload.RoleLabelKey: workload.ModelServingEntryPodLeaderLabel,
+				MetricEndpoint: workload.MetricEndpoint{
+					LabelSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							workload.RoleLabelKey: workload.ModelServingEntryPodLeaderLabel,
+						},
+					},
 				},
 			},
 			MinReplicas: backend.MinReplicas,
@@ -101,8 +105,12 @@ func BuildOptimizePolicyBindingSpec(model *workload.ModelBooster, name string) *
 					Name: targetName,
 					Kind: workload.ModelServingKind.Kind,
 				},
-				AdditionalMatchLabels: map[string]string{
-					workload.RoleLabelKey: workload.ModelServingEntryPodLeaderLabel,
+				MetricEndpoint: workload.MetricEndpoint{
+					LabelSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							workload.RoleLabelKey: workload.ModelServingEntryPodLeaderLabel,
+						},
+					},
 				},
 			},
 			MinReplicas: backend.MinReplicas,

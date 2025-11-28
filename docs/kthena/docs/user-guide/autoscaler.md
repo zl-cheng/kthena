@@ -79,11 +79,12 @@ Configures autoscaling for a single instance type:
 
 - **target**:
   - **targetRef**: References the target serving instance
-    - **name**: The name of the target resource to scale
-  - **additionalMatchLabels**: Optional set of labels to further refine target resource selection
+    - **kind**: Supported values: `ModelServing` or `ModelServing/Role`
+    - **name**: For `ModelServing`, use the serving name; for `ModelServing/Role`, use `servingName/roleName` format, e.g. `example-model-serving/prefill`
   - **metricEndpoint**: Optional endpoint configuration for custom metric collection
     - **uri**: Path to the metrics endpoint on the target pods (default: "/metrics")
     - **port**: Port number where metrics are exposed on the target pods (default: 8100)
+    - **labelSelector**: Optional label selector to filter target pods for this instance type
 - **minReplicas**: Minimum number of instances to maintain, ensuring baseline availability
   - Must be greater than or equal to 1
   - Sets a floor on scaling operations to prevent scaling down below this threshold
@@ -101,12 +102,13 @@ Configures autoscaling across multiple instance types with different capabilitie
   - Lower values prioritize strict cost control
 - **params**: Array of configuration parameters for each instance type in the optimizer group (at least 1 is required):
   - **target**:
-    - **targetRef**: References the specific instance type
-      - **name**: The name of this instance type resource
-    - **additionalMatchLabels**: Optional set of labels to refine selection for this instance type
+  - **targetRef**: References the specific instance type
+      - **kind**: Supported values: `ModelServing` or `ModelServing/Role`
+      - **name**: For `ModelServing`, use the serving name; for `ModelServing/Role`, use `servingName/roleName` format, e.g. `example-model-serving/gpu`
     - **metricEndpoint**: Optional endpoint configuration for custom metric collection
       - **uri**: Path to the metrics endpoint on the target pods (default: "/metrics")
       - **port**: Port number where metrics are exposed on the target pods (default: 8100)
+      - **labelSelector**: Optional label selector to filter target pods for this instance type
   - **minReplicas**: Minimum number of instances for this specific type
     - Ensures availability of this instance type regardless of load conditions
     - Support 0
@@ -156,6 +158,7 @@ spec:
   homogeneousTarget:
     target:
       targetRef:
+        kind: ModelServing
         name: example-model-serving
       # Optional: Customize metric collection endpoint
       metricEndpoint:
@@ -172,6 +175,39 @@ spec:
 - In stable mode, scaling decisions are executed after a 1-minute stabilization window with a 30-second period
 - Scale-down decisions are executed after a 5-minute stabilization window with a 1-minute period to ensure stable load reduction before scaling down
 - Custom metric endpoint is configured to collect metrics from "/custom-metrics" endpoint on port 9090 instead of using the default values ("/metrics" on port 8100)
+
+#### Role-Level Target Example
+
+The following demonstrates binding directly to a specific role within a `ModelServing` (role-level scaling):
+
+```yaml
+apiVersion: workload.serving.volcano.sh/v1alpha1
+kind: AutoscalingPolicyBinding
+metadata:
+  name: role-binding
+spec:
+  policyRef:
+    name: scaling-policy
+  homogeneousTarget:
+    target:
+      targetRef:
+        kind: ModelServing/Role
+        name: example-model-serving/prefill   # format: servingName/roleName
+    minReplicas: 1
+    maxReplicas: 5
+```
+
+Behavior details:
+- When the target is `ModelServing`, the controller updates the target object's `spec.replicas`
+- When the target is `ModelServing/Role`, the controller updates `replicas` for the entry in `spec.template.roles[]` whose `name` matches the role
+- If the current replica count already matches the recommended value, the controller skips the update to avoid unnecessary API calls
+
+For role-level scaling, check the role replica within the `ModelServing`:
+
+```bash
+kubectl get modelservers.networking.serving.volcano.sh <serving-name> -o jsonpath='{range .spec.template.roles[?(@.name=="<role-name>")]}{.replicas}{end}'
+```
+
 
 #### Heterogeneous Target Example
 
@@ -211,12 +247,14 @@ spec:
     params:
     - target:
         targetRef:
+          kind: ModelServing
           name: gpu-serving-instance
       minReplicas: 1
       maxReplicas: 5
       cost: 100
     - target:
         targetRef:
+          kind: ModelServing
           name: cpu-serving-instance
       minReplicas: 2
       maxReplicas: 8

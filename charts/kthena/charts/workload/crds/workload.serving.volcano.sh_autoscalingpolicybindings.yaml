@@ -85,15 +85,59 @@ spec:
                         target:
                           description: The scaling instance configuration
                           properties:
-                            additionalMatchLabels:
-                              additionalProperties:
-                                type: string
-                              description: AdditionalMatchLabels is the additional
-                                labels to match the target object.
-                              type: object
                             metricEndpoint:
                               description: MetricEndpoint is the metric source.
                               properties:
+                                labelSelector:
+                                  description: |-
+                                    LabelSelector is the additional selector to filter the pods exposing metric endpoints.
+                                    For example, Ray Leader Pod exposes the interface for retrieving monitoring metrics, but ray worker pods do not, so the labelSelector will be added `ray.io/ray-node-type: 'raylet'`.
+                                    When the targetRef kind is `ModelServing` or `ModelServing/Role`, the labelSelector will be added `modelserving.volcano.sh/entry: 'true'` default.
+                                  properties:
+                                    matchExpressions:
+                                      description: matchExpressions is a list of label
+                                        selector requirements. The requirements are
+                                        ANDed.
+                                      items:
+                                        description: |-
+                                          A label selector requirement is a selector that contains values, a key, and an operator that
+                                          relates the key and values.
+                                        properties:
+                                          key:
+                                            description: key is the label key that
+                                              the selector applies to.
+                                            type: string
+                                          operator:
+                                            description: |-
+                                              operator represents a key's relationship to a set of values.
+                                              Valid operators are In, NotIn, Exists and DoesNotExist.
+                                            type: string
+                                          values:
+                                            description: |-
+                                              values is an array of string values. If the operator is In or NotIn,
+                                              the values array must be non-empty. If the operator is Exists or DoesNotExist,
+                                              the values array must be empty. This array is replaced during a strategic
+                                              merge patch.
+                                            items:
+                                              type: string
+                                            type: array
+                                            x-kubernetes-list-type: atomic
+                                        required:
+                                        - key
+                                        - operator
+                                        type: object
+                                      type: array
+                                      x-kubernetes-list-type: atomic
+                                    matchLabels:
+                                      additionalProperties:
+                                        type: string
+                                      description: |-
+                                        matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels
+                                        map is equivalent to an element of matchExpressions, whose key field is "key", the
+                                        operator is "In", and the values array contains only "value". The requirements are ANDed.
+                                      type: object
+                                  type: object
+                                  x-kubernetes-map-type: atomic
                                 port:
                                   default: 8100
                                   description: The port of pods exposing metric endpoints
@@ -107,8 +151,8 @@ spec:
                             targetRef:
                               description: |-
                                 TargetRef references the target object.
-                                The default behavior will be set to ModelServingKind.
-                                Current supported kinds are ModelServing and ModelServing/role.
+                                The default behavior will be set to ModelServing.
+                                Current supported kinds are ModelServing and ModelServing/Role.
                               properties:
                                 apiVersion:
                                   description: API version of the referent.
@@ -179,15 +223,58 @@ spec:
                   target:
                     description: Target represents the objects be monitored and scaled.
                     properties:
-                      additionalMatchLabels:
-                        additionalProperties:
-                          type: string
-                        description: AdditionalMatchLabels is the additional labels
-                          to match the target object.
-                        type: object
                       metricEndpoint:
                         description: MetricEndpoint is the metric source.
                         properties:
+                          labelSelector:
+                            description: |-
+                              LabelSelector is the additional selector to filter the pods exposing metric endpoints.
+                              For example, Ray Leader Pod exposes the interface for retrieving monitoring metrics, but ray worker pods do not, so the labelSelector will be added `ray.io/ray-node-type: 'raylet'`.
+                              When the targetRef kind is `ModelServing` or `ModelServing/Role`, the labelSelector will be added `modelserving.volcano.sh/entry: 'true'` default.
+                            properties:
+                              matchExpressions:
+                                description: matchExpressions is a list of label selector
+                                  requirements. The requirements are ANDed.
+                                items:
+                                  description: |-
+                                    A label selector requirement is a selector that contains values, a key, and an operator that
+                                    relates the key and values.
+                                  properties:
+                                    key:
+                                      description: key is the label key that the selector
+                                        applies to.
+                                      type: string
+                                    operator:
+                                      description: |-
+                                        operator represents a key's relationship to a set of values.
+                                        Valid operators are In, NotIn, Exists and DoesNotExist.
+                                      type: string
+                                    values:
+                                      description: |-
+                                        values is an array of string values. If the operator is In or NotIn,
+                                        the values array must be non-empty. If the operator is Exists or DoesNotExist,
+                                        the values array must be empty. This array is replaced during a strategic
+                                        merge patch.
+                                      items:
+                                        type: string
+                                      type: array
+                                      x-kubernetes-list-type: atomic
+                                  required:
+                                  - key
+                                  - operator
+                                  type: object
+                                type: array
+                                x-kubernetes-list-type: atomic
+                              matchLabels:
+                                additionalProperties:
+                                  type: string
+                                description: |-
+                                  matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels
+                                  map is equivalent to an element of matchExpressions, whose key field is "key", the
+                                  operator is "In", and the values array contains only "value". The requirements are ANDed.
+                                type: object
+                            type: object
+                            x-kubernetes-map-type: atomic
                           port:
                             default: 8100
                             description: The port of pods exposing metric endpoints
@@ -201,8 +288,8 @@ spec:
                       targetRef:
                         description: |-
                           TargetRef references the target object.
-                          The default behavior will be set to ModelServingKind.
-                          Current supported kinds are ModelServing and ModelServing/role.
+                          The default behavior will be set to ModelServing.
+                          Current supported kinds are ModelServing and ModelServing/Role.
                         properties:
                           apiVersion:
                             description: API version of the referent.

@@ -50,6 +50,11 @@ type MetricEndpoint struct {
 	// +optional
 	// +kubebuilder:default=8100
 	Port int32 `json:"port,omitempty"`
+	// LabelSelector is the additional selector to filter the pods exposing metric endpoints.
+	// For example, Ray Leader Pod exposes the interface for retrieving monitoring metrics, but ray worker pods do not, so the labelSelector will be added `ray.io/ray-node-type: 'raylet'`.
+	// When the targetRef kind is `ModelServing` or `ModelServing/Role`, the labelSelector will be added `modelserving.volcano.sh/entry: 'true'` default.
+	// +optional
+	LabelSelector *metav1.LabelSelector `json:"labelSelector,omitempty"`
 }
 
 type HomogeneousTarget struct {
@@ -78,12 +83,9 @@ type HeterogeneousTarget struct {
 
 type Target struct {
 	// TargetRef references the target object.
-	// The default behavior will be set to ModelServingKind.
-	// Current supported kinds are ModelServing and ModelServing/role.
+	// The default behavior will be set to ModelServing.
+	// Current supported kinds are ModelServing and ModelServing/Role.
 	TargetRef corev1.ObjectReference `json:"targetRef"`
-	// AdditionalMatchLabels is the additional labels to match the target object.
-	// +optional
-	AdditionalMatchLabels map[string]string `json:"additionalMatchLabels,omitempty"`
 	// MetricEndpoint is the metric source.
 	// +optional
 	MetricEndpoint MetricEndpoint `json:"metricEndpoint,omitempty"`
