@@ -20,40 +20,41 @@ The autoscaler operates through two primary custom resources:
 
 The [`AutoscalingPolicy`](reference/crd/workload.serving.volcano.sh.md#autoscalingpolicy) resource defines the core autoscaling strategy and behavior parameters.
 
-#### Core Components
-
-##### Metrics Configuration
+#### Metrics Configuration
 - **metricName**: Name of the metric to monitor (e.g., `kthena:num_requests_waiting`)
 - **targetValue**: Target value for the specified metric, serving as the scaling threshold
   - *Example*: Setting `targetValue: 10.0` for `kthena:num_requests_waiting` means the autoscaler aims to maintain no more than 10 waiting requests per instance
 
-##### Tolerance Configuration
+#### Tolerance Configuration
 - **tolerancePercent**: Defines the tolerance range around the target value before scaling actions are triggered
 - **Purpose**: Prevents frequent scaling (thrashing) due to minor metric fluctuations
 - *Example*: With `tolerancePercent: 10` and a target value of 10.0, scaling occurs only if the actual metric value exceeds 11.0 (target + 10%) or falls below 9.0 (target - 10%)
 
-##### Behavior Configuration
-Controls detailed scaling behavior for both scale-up and scale-down operations:
+#### Behavior Configuration
+Controls detailed scaling behavior for both **scale-up** and **scale-down** operations:
 
-###### Scale-Up Behavior
+**Scale-Up Behavior**
+
 Defines how the system responds to increased load:
 
-**Panic Policy** (Handles sudden traffic spikes):
-- **panicThresholdPercent**: Percentage above target that triggers panic mode
-  - *Example*: `panicThresholdPercent: 150` triggers when metrics reach 150% of target
-- **panicModeHold**: Duration to remain in panic mode
-  - *Example*: `panicModeHold: 5m` keeps panic mode active for 5 minutes
-- **Purpose**: Accelerates scaling during sudden traffic spikes to prevent service degradation
+- **Panic Policy** (Handles sudden traffic spikes):
+  - **panicThresholdPercent**: Percentage above target that triggers panic mode
+    - *Example*: `panicThresholdPercent: 150` triggers when metrics reach 150% of target
+  - **panicModeHold**: Duration to remain in panic mode
+    - *Example*: `panicModeHold: 5m` keeps panic mode active for 5 minutes
+  - **Purpose**: Accelerates scaling during sudden traffic spikes to prevent service degradation
 
-**Stable Policy** (Handles gradual load increases):
-- **stabilizationWindow**: Time window to observe metrics before making scaling decisions
-  - *Example*: `stabilizationWindow: 1m` waits 1 minute of sustained high load before scaling
-- **period**: Interval between scaling evaluations
-  - *Example*: `period: 30s` checks conditions every 30 seconds
-- **Purpose**: Ensures scaling decisions are based on stable load patterns rather than transient spikes
+- **Stable Policy** (Handles gradual load increases):
+  - **stabilizationWindow**: Time window to observe metrics before making scaling decisions
+    - *Example*: `stabilizationWindow: 1m` waits 1 minute of sustained high load before scaling
+  - **period**: Interval between scaling evaluations
+    - *Example*: `period: 30s` checks conditions every 30 seconds
+  - **Purpose**: Ensures scaling decisions are based on stable load patterns rather than transient spikes
 
-###### Scale-Down Behavior
+**Scale-Down Behavior**
+
 Defines how the system responds to decreased load:
+
 - **stabilizationWindow**: Longer time window to observe decreased load before scaling down
   - *Example*: `stabilizationWindow: 5m` requires 5 minutes of sustained low load
   - **Rationale**: Typically set longer than scale-up to ensure system stability and avoid premature capacity reduction
