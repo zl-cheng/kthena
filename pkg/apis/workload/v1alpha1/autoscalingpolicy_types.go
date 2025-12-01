@@ -71,11 +71,11 @@ type AutoscalingPolicyScaleUpPolicy struct {
 
 // AutoscalingPolicyStablePolicy defines the stable scaling policy for both scale up and scale down operations.
 type AutoscalingPolicyStablePolicy struct {
-	// Instances defines the maximum absolute number of instances to scale in a single operation.
+	// Instances defines the maximum absolute number of instances to scale per period.
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:default=1
 	Instances *int32 `json:"instances,omitempty"`
-	// Percent defines the maximum percentage of current instances to scale in a single operation.
+	// Percent defines the maximum percentage of current instances to scale per period.
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=1000
 	// +kubebuilder:default=100

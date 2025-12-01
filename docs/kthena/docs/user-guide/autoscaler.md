@@ -2,12 +2,12 @@
 
 ## Overview
 
-Kthena Autoscaler dynamically adjusts serving instances based on real-time workload metrics, ensuring optimal performance and resource utilization. The autoscaler supports two distinct configuration modes:
+The Kthena Autoscaler dynamically adjusts serving instances based on real-time workload metrics to ensure optimal performance and resource utilization. It supports two distinct configuration modes:
 
-- **Homogeneous Target**: Manages a group of serving instances with identical configurations, ensuring stable performance while optimizing resource utilization.
-- **Heterogeneous Target**: Optimizes across multiple instance types with different resource requirements and capabilities, achieving cost-efficiency through intelligent scheduling algorithms.
+- **Homogeneous Target**: Manages serving instances with identical configurations, ensuring stable performance while optimizing resource utilization
+- **Heterogeneous Target**: Optimizes across multiple instance types with different resource requirements and capabilities, achieving cost-efficiency through intelligent scheduling algorithms
 
-Both modes leverage the same core autoscaling mechanisms but differ in their resource targeting and management approaches.
+Both modes use the same core autoscaling mechanisms but differ in their resource targeting and management approaches.
 
 ## Configuration Guide
 
@@ -25,7 +25,7 @@ The [`AutoscalingPolicy`](reference/crd/workload.serving.volcano.sh.md#autoscali
 ##### Metrics Configuration
 - **metricName**: Name of the metric to monitor (e.g., `kthena:num_requests_waiting`)
 - **targetValue**: Target value for the specified metric, serving as the scaling threshold
-  - *Example*: Setting `targetValue: 10.0` for `kthena:num_requests_waiting` means the autoscaler will aim to maintain no more than 10 waiting requests per instance
+  - *Example*: Setting `targetValue: 10.0` for `kthena:num_requests_waiting` means the autoscaler aims to maintain no more than 10 waiting requests per instance
 
 ##### Tolerance Configuration
 - **tolerancePercent**: Defines the tolerance range around the target value before scaling actions are triggered
@@ -83,7 +83,7 @@ spec:
 
 #### Homogeneous Target Mode
 
-Configures autoscaling for a single instance type (homogeneous scaling):
+Configures autoscaling for a single instance type:
 
 - **target**:
   - **targetRef**: References the target serving instance
@@ -102,13 +102,18 @@ Configures autoscaling for a single instance type (homogeneous scaling):
 
 #### Heterogeneous Target Mode
 
-- **costExpansionRatePercent**: Defines the maximum acceptable cost increase percentage (default: 200)
-  - When scaling, the algorithm will consider instance combinations that don't exceed the base cost plus this percentage
+Configures autoscaling across multiple instance types with cost optimization:
+
+**Cost Optimization**:
+- **costExpansionRatePercent**: Maximum acceptable cost increase percentage (default: 200)
+  - When scaling, the algorithm considers instance combinations that don't exceed the base cost plus this percentage
   - Higher values allow more flexibility in instance selection for better performance
   - Lower values prioritize strict cost control
-- **params**: Array of configuration parameters for each instance type in the optimizer group (at least 1 is required):
+
+**Instance Type Parameters** (array, at least 1 required):
+- **params**: Array of configuration parameters for each instance type (at least 1 required):
   - **target**:
-  - **targetRef**: References the specific instance type
+    - **targetRef**: References the specific instance type
       - **kind**: Supported values: `ModelServing` or `ModelServing/Role`
       - **name**: For `ModelServing`, use the serving name; for `ModelServing/Role`, use `servingName/roleName` format, e.g. `example-model-serving/gpu`
     - **metricEndpoint**: Optional endpoint configuration for custom metric collection
@@ -117,32 +122,14 @@ Configures autoscaling for a single instance type (homogeneous scaling):
       - **labelSelector**: Optional label selector to filter target pods for this instance type
   - **minReplicas**: Minimum number of instances for this specific type
     - Ensures availability of this instance type regardless of load conditions
-    - Support 0
+    - Supports 0
   - **maxReplicas**: Maximum number of instances for this specific type
     - Caps resource allocation for this particular instance type
   - **cost**: Relative or actual cost metric for this instance type
     - Used by the optimization algorithm to balance performance and cost
     - Higher values represent more expensive instance types
 
-**Cost Optimization**:
-- **costExpansionRatePercent**: Maximum acceptable cost increase percentage (default: 200)
-  - Algorithm considers instance combinations within base cost plus this percentage
-  - Higher values: More flexibility for performance optimization
-  - Lower values: Strict cost control
-
-**Instance Type Parameters** (array, at least 1 required):
-- **target**: Instance type configuration
-  - **targetRef**: References the specific instance type
-    - **name**: Name of this instance type resource
-  - **additionalMatchLabels**: Optional labels to refine instance selection
-  - **metricEndpoint**: Optional custom metric collection endpoint
-- **minReplicas**: Minimum instances for this type (supports 0)
-  - Ensures availability of specific instance types
-- **maxReplicas**: Maximum instances for this type
-  - Caps resource allocation per instance type
-- **cost**: Relative or actual cost metric
-  - Used by optimization algorithm to balance performance and cost
-  - Higher values represent more expensive instance types
+The heterogeneous mode's optimization algorithm automatically determines the optimal combination of instance types to balance performance requirements against cost constraints, always respecting the defined minReplicas and maxReplicas boundaries for each instance type.
 
 ### Configuration Examples
 
@@ -203,7 +190,7 @@ spec:
 
 #### Role-Level Target Example
 
-The following demonstrates binding directly to a specific role within a `ModelServing` (role-level scaling):
+This example demonstrates binding directly to a specific role within a `ModelServing` (role-level scaling):
 
 ```yaml
 apiVersion: workload.serving.volcano.sh/v1alpha1
@@ -222,7 +209,7 @@ spec:
     maxReplicas: 5
 ```
 
-Behavior details:
+**Behavior Details:**
 - When the target is `ModelServing`, the controller updates the target object's `spec.replicas`
 - When the target is `ModelServing/Role`, the controller updates `replicas` for the entry in `spec.template.roles[]` whose `name` matches the role
 - If the current replica count already matches the recommended value, the controller skips the update to avoid unnecessary API calls
@@ -235,7 +222,7 @@ kubectl get modelservers.networking.serving.volcano.sh <serving-name> -o jsonpat
 
 #### Heterogeneous Target Example
 
-The following configuration demonstrates optimizer configuration across multiple instance types:
+This example demonstrates cost-optimized scaling across multiple instance types:
 
 ```yaml showLineNumbers
 apiVersion: workload.serving.volcano.sh/v1alpha1
@@ -365,14 +352,16 @@ If your autoscaling configuration doesn't behave as expected:
 5. **Test Load Patterns**: Gradually increase or decrease load to observe scaling behavior across different conditions
 6. **Check Resource Availability**: Verify cluster has sufficient resources for scaling operations
 
-By following these monitoring and verification practices, you can ensure your autoscaling configurations are working correctly and optimizing workload resource usage efficiently.
+By following these monitoring and verification practices, you can ensure your autoscaling configurations work correctly and optimize workload resource usage efficiently.
 
 ## Summary
 
-Kthena Autoscaler provides powerful, flexible autoscaling capabilities for your serving workloads:
+The Kthena Autoscaler provides powerful, flexible autoscaling capabilities for your serving workloads:
 
 - **Dual Modes**: Choose between homogeneous scaling (single instance type) or heterogeneous optimization (multiple instance types)
 - **Precise Control**: Fine-tune scaling behavior with panic thresholds, stabilization windows, and tolerance ranges
 - **Cost Optimization**: Automatically balance performance and cost across different instance types
+- **Role-Level Scaling**: Target specific roles within `ModelServing` resources for granular control
+- **Custom Metrics**: Configure custom metric endpoints for specialized monitoring needs
 
 For more advanced configurations and use cases, refer to the [Kthena CLI reference](../reference/cli/kthena.md) and [CRD documentation](../reference/crd/workload.serving.volcano.sh.md).
