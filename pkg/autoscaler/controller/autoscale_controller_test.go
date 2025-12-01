@@ -101,8 +101,8 @@ func TestToleranceHigh_then_DoScale_expect_NoUpdateActions(t *testing.T) {
 	policy := &workload.AutoscalingPolicy{Spec: workload.AutoscalingPolicySpec{TolerancePercent: 100, Metrics: []workload.AutoscalingPolicyMetric{{MetricName: "load", TargetValue: resource.MustParse("1")}}, Behavior: workload.AutoscalingPolicyBehavior{}}}
 	binding := &workload.AutoscalingPolicyBinding{ObjectMeta: metav1.ObjectMeta{Name: "binding-a", Namespace: ns}, Spec: workload.AutoscalingPolicyBindingSpec{PolicyRef: corev1.LocalObjectReference{Name: "ap"}, HomogeneousTarget: &workload.HomogeneousTarget{Target: target, MinReplicas: 1, MaxReplicas: 100}}}
 
-    lbs := map[string]string{}
-    pods := []*corev1.Pod{readyPod(ns, "pod-a", host, lbs)}
+	lbs := map[string]string{}
+	pods := []*corev1.Pod{readyPod(ns, "pod-a", host, lbs)}
 	ac := &AutoscaleController{client: client, namespace: ns, modelServingLister: msLister, podsLister: fakePodLister{podsByNs: map[string][]*corev1.Pod{ns: pods}}, scalerMap: map[string]*autoscalerAutoscaler{}, optimizerMap: map[string]*autoscalerOptimizer{}}
 
 	if err := ac.doScale(context.Background(), binding, policy); err != nil {
@@ -129,8 +129,8 @@ func TestHighLoad_then_DoScale_expect_Replicas10(t *testing.T) {
 	policy := &workload.AutoscalingPolicy{Spec: workload.AutoscalingPolicySpec{TolerancePercent: 0, Metrics: []workload.AutoscalingPolicyMetric{{MetricName: "load", TargetValue: resource.MustParse("1")}}}}
 	binding := &workload.AutoscalingPolicyBinding{ObjectMeta: metav1.ObjectMeta{Name: "binding-up", Namespace: ns}, Spec: workload.AutoscalingPolicyBindingSpec{PolicyRef: corev1.LocalObjectReference{Name: "ap"}, HomogeneousTarget: &workload.HomogeneousTarget{Target: target, MinReplicas: 1, MaxReplicas: 10}}}
 
-    lbs := map[string]string{}
-    pods := []*corev1.Pod{readyPod(ns, "pod-up", host, lbs)}
+	lbs := map[string]string{}
+	pods := []*corev1.Pod{readyPod(ns, "pod-up", host, lbs)}
 	ac := &AutoscaleController{client: client, namespace: ns, modelServingLister: msLister, podsLister: fakePodLister{podsByNs: map[string][]*corev1.Pod{ns: pods}}, scalerMap: map[string]*autoscalerAutoscaler{}, optimizerMap: map[string]*autoscalerOptimizer{}}
 
 	if err := ac.doScale(context.Background(), binding, policy); err != nil {
@@ -164,9 +164,9 @@ func TestTwoBackends_then_DoOptimize_expect_UpdateActions(t *testing.T) {
 	policy := &workload.AutoscalingPolicy{Spec: workload.AutoscalingPolicySpec{TolerancePercent: 0, Metrics: []workload.AutoscalingPolicyMetric{{MetricName: "load", TargetValue: resource.MustParse("1")}}, Behavior: workload.AutoscalingPolicyBehavior{ScaleUp: workload.AutoscalingPolicyScaleUpPolicy{PanicPolicy: workload.AutoscalingPolicyPanicPolicy{Period: metav1.Duration{Duration: (1 * time.Second)}, PanicThresholdPercent: &threshold}}}}}
 	binding := &workload.AutoscalingPolicyBinding{ObjectMeta: metav1.ObjectMeta{Name: "binding-b", Namespace: ns}, Spec: workload.AutoscalingPolicyBindingSpec{PolicyRef: corev1.LocalObjectReference{Name: "ap"}, HeterogeneousTarget: &workload.HeterogeneousTarget{Params: []workload.HeterogeneousTargetParam{paramA, paramB}, CostExpansionRatePercent: 100}}}
 
-    lbsA := map[string]string{}
-    lbsB := map[string]string{}
-    pods := []*corev1.Pod{readyPod(ns, "pod-a", host, lbsA), readyPod(ns, "pod-b", host, lbsB)}
+	lbsA := map[string]string{}
+	lbsB := map[string]string{}
+	pods := []*corev1.Pod{readyPod(ns, "pod-a", host, lbsA), readyPod(ns, "pod-b", host, lbsB)}
 	ac := &AutoscaleController{client: client, namespace: ns, modelServingLister: msLister, podsLister: fakePodLister{podsByNs: map[string][]*corev1.Pod{ns: pods}}, scalerMap: map[string]*autoscalerAutoscaler{}, optimizerMap: map[string]*autoscalerOptimizer{}}
 
 	if err := ac.doOptimize(context.Background(), binding, policy); err != nil {
@@ -202,9 +202,9 @@ func TestTwoBackendsHighLoad_then_DoOptimize_expect_DistributionA5B4(t *testing.
 	policy := &workload.AutoscalingPolicy{Spec: workload.AutoscalingPolicySpec{TolerancePercent: 0, Metrics: []workload.AutoscalingPolicyMetric{{MetricName: "load", TargetValue: resource.MustParse("1")}}, Behavior: workload.AutoscalingPolicyBehavior{ScaleUp: workload.AutoscalingPolicyScaleUpPolicy{PanicPolicy: workload.AutoscalingPolicyPanicPolicy{Period: metav1.Duration{Duration: (1 * time.Second)}, PanicThresholdPercent: &threshold}}}}}
 	binding := &workload.AutoscalingPolicyBinding{ObjectMeta: metav1.ObjectMeta{Name: "binding-b2", Namespace: ns}, Spec: workload.AutoscalingPolicyBindingSpec{PolicyRef: corev1.LocalObjectReference{Name: "ap"}, HeterogeneousTarget: &workload.HeterogeneousTarget{Params: []workload.HeterogeneousTargetParam{paramA, paramB}, CostExpansionRatePercent: 100}}}
 
-    lbsA := map[string]string{}
-    lbsB := map[string]string{}
-    pods := []*corev1.Pod{readyPod(ns, "pod-a2", host, lbsA), readyPod(ns, "pod-b2", host, lbsB)}
+	lbsA := map[string]string{}
+	lbsB := map[string]string{}
+	pods := []*corev1.Pod{readyPod(ns, "pod-a2", host, lbsA), readyPod(ns, "pod-b2", host, lbsB)}
 	ac := &AutoscaleController{client: client, namespace: ns, modelServingLister: msLister, podsLister: fakePodLister{podsByNs: map[string][]*corev1.Pod{ns: pods}}, scalerMap: map[string]*autoscalerAutoscaler{}, optimizerMap: map[string]*autoscalerOptimizer{}}
 
 	if err := ac.doOptimize(context.Background(), binding, policy); err != nil {
